@@ -1,6 +1,5 @@
 package com.nayak;
 
-import java.util.LinkedList;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -12,46 +11,92 @@ public class Segmentation {
         this.result = result;
     }
 
-    public static Segmentation using(Person person) {
-        return new Segmentation(person);
+    public static SegmentationUsing using(Person person) {
+        return new SegmentationUsing(person);
     }
 
-    public Segmentation withBooleanCase(Predicate<Person> predicate) {
-        boolean test = predicate.test(result);
-        return new Segmentation(result);
+
+    static class SegmentationBuild {
+        Person result;
+
+        public SegmentationBuild(Person result) {
+            this.result = result;
+        }
+
+        public Person build() {
+            return result;
+        }
+
     }
 
-    public Segmentation withStringCase(Function<Person, String> function) {
-        String apply = function.apply(result);
-        return new Segmentation(result);
+
+    static class SegmentationThen {
+        Person result;
+
+        public SegmentationThen(Person result) {
+            this.result = result;
+        }
+
+        public SegmentationBuild thenFinally(Function<Person, Person> procedures) {
+            return new SegmentationBuild(result);
+        }
+
+
+        public SegmentationWhen then(Function<Person, Person> procedures) {
+            return new SegmentationWhen(result);
+        }
+
     }
 
-    public Segmentation withNumberCase(Function<Person, String> function) {
-        String apply = function.apply(result);
-        return new Segmentation(result);
+    static class SegmentationWhen {
+        Person result;
+
+        public SegmentationWhen(Person result) {
+            this.result = result;
+        }
+
+        public SegmentationThen when(Predicate<Person> predicate) {
+            boolean test = predicate.test(result);
+            return new SegmentationThen(result);
+        }
+
+        public SegmentationThen when(boolean predicate) {
+            return new SegmentationThen(result);
+        }
+
+
+        public SegmentationBuild otherwise(Function<Person, Person> procedures) {
+            return new SegmentationBuild(result);
+        }
+
     }
 
-    public Segmentation withEnumCase(Function<Person, Enum> function) {
-        Enum apply = function.apply(result);
-        return new Segmentation(result);
-    }
+    static class SegmentationUsing {
+        Person result;
 
-    public Segmentation when(Predicate<Person> predicate) {
-        boolean test = predicate.test(result);
-        return new Segmentation(result);
-    }
+        public SegmentationUsing(Person result) {
+            this.result = result;
+        }
 
-    public Segmentation when(boolean predicate) {
-        return new Segmentation(result);
-    }
+        public SegmentationWhen withBooleanCase(Predicate<Person> predicate) {
+            boolean test = predicate.test(result);
+            return new SegmentationWhen(result);
+        }
 
-    public Segmentation then(Function<Person, Person> procedures) {
+        public SegmentationWhen withStringCase(Function<Person, String> function) {
+            String apply = function.apply(result);
+            return new SegmentationWhen(result);
+        }
 
-        return new Segmentation(result);
-    }
+        public SegmentationWhen withNumberCase(Function<Person, String> function) {
+            String apply = function.apply(result);
+            return new SegmentationWhen(result);
+        }
 
-    public Person build() {
-        return result;
+        public SegmentationWhen withEnumCase(Function<Person, Enum> function) {
+            Enum apply = function.apply(result);
+            return new SegmentationWhen(result);
+        }
     }
 
 }

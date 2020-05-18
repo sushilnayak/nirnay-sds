@@ -1,10 +1,6 @@
 package com.nayak;
 
 import com.nayak.sds.Workflow;
-import lombok.*;
-
-import java.util.List;
-import java.util.function.Function;
 
 public class MainApp {
     public static void main(String[] args) {
@@ -42,9 +38,8 @@ public class MainApp {
                 .decision(p -> Segmentation.using(p)
                         .withBooleanCase(x -> x.getAge() == 12)
                         .when(true).then(w -> postBureau(preBureau(w).build()).build())
-                        .when(true).then(w -> Procedure.builder(w)
-                                .compose(x -> preBureau(x).build()
-                                ).build())
+                        .when(false).then(x -> null)
+                        .otherwise(null)
                         .build()
                 );
 
