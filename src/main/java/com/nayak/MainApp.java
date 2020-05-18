@@ -1,13 +1,10 @@
 package com.nayak;
 
 import com.nayak.sds.Workflow;
-import com.nayak.sds.procedure.Procedure;
-import com.nayak.sds.segmentation.Segmentation;
-import com.nayak.sds.segmentation.SubPopulation;
 import lombok.*;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Function;
 
 public class MainApp {
     public static void main(String[] args) {
@@ -22,7 +19,7 @@ public class MainApp {
 //        - Classset -> Categorial Type
 //        - Matrices -> CrossTab ( n * n matix )
 
-//        Scorecard => intial scoring (optional) -> classsets (multiple 1 or more) -> transformation(optional)
+//        Scorecard => intial scoring (optional) -> classsets (multiple 1 or more) -> transformation(optional) -> Segmentation() -> Segmentation ->
 
 
 //        Derived Script  -- can ignore
@@ -42,18 +39,36 @@ public class MainApp {
                 .supplyData(() -> person)
                 .name("Main Workflow")
                 .initialization(p -> p.withAge(30))
-                .decision(p -> p, Segmentation.condition(ageCondition).condition().condition().build())
-                .decision(p -> p, Segmentation.condition(ageCondition).condition().build())
-                .segementation(p -> p, Segmentation.condition(booleanCondition)
-                        .trueCondition(procedure1, procedure2, procedure3)
-                        .falseCondition(falseCondition1)
-                        .build())
-                .segementation(p -> p, Segmentation.condition(categorialCondition)
-                        .firstCondition(procedure1, procedure2, procedure3)
-                        .secondCondition(secondProcedure1)
-                        .thirdCondition(falseCondition1)
-                        .build())
-                ;
+                .decision(p -> Segmentation.using(p)
+                        .withBooleanCase(x -> x.getAge() == 12)
+                        .when(true).then(w -> postBureau(preBureau(w).build()).build())
+                        .when(true).then(w -> Procedure.builder(w)
+                                .compose(x -> preBureau(x).build()
+                                ).build())
+                        .build()
+                );
+
+        Summer<Integer> integerSummer = Summer.start(0)
+                .then1(1)
+                .then2(2);
+
+        Integer apply = integerSummer.apply(9);
+
+        System.out.println(apply);
+
+//        Example<Person> example = Example.builder()
+//                .evaluate(person)
+//                .withCase()
+//                .when().then()
+//                .when().then()
+//                .when().then()
+//                .build();
+
+//                .decision(p -> Segmentation.builder(p)
+//                        .withBooleanCase(x -> x.getAge() == 12)
+//                        .when(true).then(preBureau(p))
+//                        .when(false).then(postBureau(p))
+//                        .build());
 //                .segementation(Segmentation.condition().trueCondition(procedure1, procedure2, procedure3).falseCondition().build())
 //                .segementation(p -> new AgeGt10SubPopulation())
 //                .segmentation(p -> new AgeGt10SubPopulation());
@@ -62,54 +77,35 @@ public class MainApp {
         Person build = workflow.build();
 
         System.out.println(build);
-//                .subroutine(s -> Conditional.when(person1 -> person.getAge() == s.getAge() && s.getAge() == 12, preBureau(s)));
-
-
-//                .subroutine(s -> Conditional.when(p -> p.getAge() == 30, person -> postBureau(person))
-//                                            .or(p -> p.getSalary() -> 30000, person -> randomBureau(person))
-//                                            .otherwise(person -> preBureau(person)));
-
-//        Workflow( name ) -> Initialization( name ) -> log -> subroutine (name ) -> Decision (postbeaure) ->
-
-
     }
 
-    //    public static Workflow<Person> postBureau(Person person) {
-//        return Workflow.supplyData(() -> person)
-//                .scorecard()
-//                .policyRuleSet();
-//    }
-//
     public static Workflow<Person> preBureau(Person person) {
+        return null;
+//        return Workflow.supplyData(() -> person)
+//                .segmentation(p -> Segmentation.builder(p).name("Address Segmentation")
+//                        .withStringCase(p -> p.getAge == 12)
+//                        .when(x -> x > 12 && x < 11).then(procedure1, procedure2, procedure3)
+//                        .when(x -> x.age == 12).then(procedure1, procedure2, procedure3)
+//                        .when(x -> x.name.startsWith("s")).then(procedure1, procedure2, procedure3)
+//                        .otherwise(procedire5)
+//                        .build()
+//                ).segmentation(p -> Segmentation.builder(p).name("Age Segmentation")
+//                        .withNumberCase(p -> p.getAge == 12)
+//                        .when(x -> x > 12 && x < 11).then(p -> {
+//                            preBureau(p);
+//                            shovik(p);
+//                            sushil(p);
+//                        })
+//                        .when(17).then(procedure1, procedure2, procedure3)
+//                        .when(19).then(procedure1, procedure2, procedure3)
+//                        .otherwise(procedire5)
+//                        .build()
+//                );
+    }
+
+    public static Workflow<Person> postBureau(Person person) {
         return Workflow.supplyData(() -> person);
     }
 
-    //
-//    public static Workflow<Person> randomBureau(Person person) {
-//        return Workflow.supplyData(() -> person);
-//    }
-    @AllArgsConstructor
-    @ToString
-    @Data
-    @NoArgsConstructor
-    static class Person {
-        @With
-        private String name;
-        @With
-        private int age;
-    }
 
-    static class AgeGt10SubPopulation implements SubPopulation<Person> {
-
-        @Override
-        public String getName() {
-            return "Age > 10";
-        }
-
-        @Override
-        public Boolean apply(Person person) {
-            return person.getAge() > 10;
-        }
-
-    }
 }

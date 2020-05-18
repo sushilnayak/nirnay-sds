@@ -1,8 +1,5 @@
 package com.nayak.sds;
 
-import com.nayak.sds.procedure.Procedure;
-import com.nayak.sds.segmentation.Segmentation;
-import com.nayak.sds.segmentation.SubPopulation;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedList;
@@ -35,28 +32,11 @@ public class Workflow<T> {
         return new Workflow<>(init.apply((T) result));
     }
 
+    public Workflow<T> decision(Function<T, T> function) {
 
-    public Workflow<T> statelessSegmentation(SubPopulation<T> segmentation, LinkedList<Procedure> trueProcedures, LinkedList<Procedure> falseProcedure) {
-        if (Boolean.FALSE.equals(segmentation.apply((T) result))) {
+        return new Workflow<>((T) result);
 
-            for (int i = 0; i < trueProcedures.size(); i++) {
-                Procedure procedure = trueProcedures.get(i);
-                procedure.apply(result);
-            }
-            return new Workflow<>(result);
-        }
-
-
-//        T apply = segmentation.apply((T) result);
-        path.add(Thread.currentThread().getStackTrace()[1].getMethodName() + "(" + segmentation.getName() + ")");
-        return new Workflow<>(result);
     }
-
-    public Workflow<T> statefullSegmentation(SubPopulation<T> segmentation, LinkedList<Procedure> procedures) {
-        path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
-        return new Workflow<>(result);
-    }
-
 
     public T build() {
         log.info(String.join(" -> ", path));
@@ -70,7 +50,4 @@ public class Workflow<T> {
     }
 
 
-    public Workflow<T> segementation(SubPopulation<T> t) {
-        t.apply()
-    }
 }
