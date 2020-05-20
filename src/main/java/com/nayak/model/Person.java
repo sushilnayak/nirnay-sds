@@ -1,4 +1,4 @@
-package com.nayak;
+package com.nayak.model;
 
 import lombok.*;
 
@@ -12,4 +12,9 @@ public class Person {
     private String name;
     @With
     private int age;
+    @With
+    private Gender gender;
+
+    @With
+    private Address address;
 }

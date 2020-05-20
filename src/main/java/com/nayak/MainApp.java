@@ -1,6 +1,10 @@
 package com.nayak;
 
+import com.nayak.model.Address;
+import com.nayak.model.Gender;
+import com.nayak.model.Person;
 import com.nayak.sds.Workflow;
+import com.nayak.sds.decision.segment.Segmentation;
 
 public class MainApp {
     public static void main(String[] args) {
@@ -24,7 +28,7 @@ public class MainApp {
 //        Policy Rule Set -> Workflow -> Policy Rule
 
 
-        Person person = new Person("Sushil", 35);
+        Person person = new Person("Sushil", 35, Gender.MALE, Address.builder().addressLine1("xx").build());
 
         descision(person);
     }
@@ -35,39 +39,12 @@ public class MainApp {
                 .supplyData(() -> person)
                 .name("Main Workflow")
                 .initialization(p -> p.withAge(30))
-                .decision(p -> Segmentation.using(p)
-                        .withBooleanCase(x -> x.getAge() == 12)
+                .log()
+                .decision(person1 -> Segmentation.using(person1).name("Age Based Segmentation")
+                        .withBooleanCase(x -> x.getAge() == 30)
                         .when(true).then(w -> postBureau(preBureau(w).build()).build())
-                        .when(false).then(x -> null)
-                        .otherwise(null)
-                        .build()
-                );
-
-        Summer<Integer> integerSummer = Summer.start(0)
-                .then1(1)
-                .then2(2);
-
-        Integer apply = integerSummer.apply(9);
-
-        System.out.println(apply);
-
-//        Example<Person> example = Example.builder()
-//                .evaluate(person)
-//                .withCase()
-//                .when().then()
-//                .when().then()
-//                .when().then()
-//                .build();
-
-//                .decision(p -> Segmentation.builder(p)
-//                        .withBooleanCase(x -> x.getAge() == 12)
-//                        .when(true).then(preBureau(p))
-//                        .when(false).then(postBureau(p))
-//                        .build());
-//                .segementation(Segmentation.condition().trueCondition(procedure1, procedure2, procedure3).falseCondition().build())
-//                .segementation(p -> new AgeGt10SubPopulation())
-//                .segmentation(p -> new AgeGt10SubPopulation());
-
+                        .when(false).then(x -> x.withAge(99))
+                        .build());
 
         Person build = workflow.build();
 
@@ -75,16 +52,20 @@ public class MainApp {
     }
 
     public static Workflow<Person> preBureau(Person person) {
-        return null;
+        return Workflow.supplyData(() -> person)
+                .decision(p -> Segmentation.using(p).name("Test Segmentation")
+                        .withBooleanCase(x -> x.getGender() == Gender.MALE).when(true).then(a -> a.withAddress(a.getAddress().withAddressLine1("qqqqqqq"))).build());
 //        return Workflow.supplyData(() -> person)
-//                .segmentation(p -> Segmentation.builder(p).name("Address Segmentation")
-//                        .withStringCase(p -> p.getAge == 12)
-//                        .when(x -> x > 12 && x < 11).then(procedure1, procedure2, procedure3)
-//                        .when(x -> x.age == 12).then(procedure1, procedure2, procedure3)
-//                        .when(x -> x.name.startsWith("s")).then(procedure1, procedure2, procedure3)
-//                        .otherwise(procedire5)
-//                        .build()
-//                ).segmentation(p -> Segmentation.builder(p).name("Age Segmentation")
+//                .decision(p -> Segmentation.using(p).name("Generic Segmentation")
+////                        .name("Address Segmentation")
+//                                .withNumberCase(Person::getAge)
+//                                .when(number -> number.intValue() > 12 && number.intValue() < 11)
+//                                .then(procedure1, procedure2, procedure3)
+//                                .when(x -> x.intValue() == 12)
+//                                .then(procedure1, procedure2, procedure3)
+//                                .otherwise(procedire5)
+//                                .build()
+//                ).segmentation(p -> Segmentation.using(p).name("Age Segmentation")
 //                        .withNumberCase(p -> p.getAge == 12)
 //                        .when(x -> x > 12 && x < 11).then(p -> {
 //                            preBureau(p);

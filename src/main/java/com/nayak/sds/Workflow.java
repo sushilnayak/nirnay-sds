@@ -8,33 +8,33 @@ import java.util.function.Supplier;
 
 @Slf4j
 public class Workflow<T> {
-    Object result;
-    private static LinkedList<String> path = new LinkedList<>();
+    private Object result;
+    public static LinkedList<String> path = new LinkedList<>();
 
     private Workflow(Object result) {
         this.result = result;
     }
 
     public Workflow<T> name(String name) {
-        path.addFirst("Workflow(" + name + ")");
+        Workflow.path.add("Workflow(" + name + ")");
         return new Workflow<>((T) result);
     }
 
     public static <T> Workflow<T> supplyData(Supplier<T> supplier) {
-        path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
+//        Workflow.path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
 
         return new Workflow<>(supplier.get());
     }
 
     public Workflow<T> initialization(Function<T, T> init) {
-        path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
+        Workflow.path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
 
         return new Workflow<>(init.apply((T) result));
     }
 
     public Workflow<T> decision(Function<T, T> function) {
-
-        return new Workflow<>((T) result);
+        Workflow.path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
+        return new Workflow<>((T) function.apply((T) result));
 
     }
 

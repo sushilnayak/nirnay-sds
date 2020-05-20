@@ -1,8 +1,5 @@
-package com.nayak;
+package com.nayak.sds;
 
-import com.nayak.sds.Workflow;
-
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public interface Procedure<T> {
