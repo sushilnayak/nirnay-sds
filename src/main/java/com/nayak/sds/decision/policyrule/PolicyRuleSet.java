@@ -1,4 +1,7 @@
 package com.nayak.sds.decision.policyrule;
 
-public class PolicyRuleSet {
+import com.nayak.sds.decision.Procedure;
+
+public class PolicyRuleSet<T> {
+
 }
