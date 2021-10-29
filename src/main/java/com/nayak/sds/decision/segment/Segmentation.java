@@ -1,6 +1,7 @@
 package com.nayak.sds.decision.segment;
 
 import com.nayak.sds.Workflow;
+import com.nayak.sds.WorkflowContextHolder;
 import com.nayak.sds.decision.Procedure;
 
 import java.util.Objects;
@@ -165,11 +166,6 @@ public class Segmentation<T> {
             }
         }
 
-        //        public SegmentationThen<T, R> whenRange(Predicate<T> condition) {
-//            boolean matchingWhen= condition.test(result);
-//            return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
-//        }
-//
         public SegmentationThen<T, R> when(IntPredicate condition) {
             boolean matchingWhen = condition.test((Integer) caseCondition);
             return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
@@ -194,11 +190,6 @@ public class Segmentation<T> {
             }
             return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
         }
-//
-//        public SegmentationThen<T, R> when(Predicate<T> condition) {
-//            boolean matchingWhen = condition.test((T) caseCondition);
-//            return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
-//        }
 
         public SegmentationThen<T, R> when(R condition) {
             boolean matchingWhen;

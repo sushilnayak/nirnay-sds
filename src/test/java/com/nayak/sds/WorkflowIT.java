@@ -30,7 +30,7 @@ class WorkflowIT {
     public Person decision(Person person) {
 
 
-        Workflow<Person> workflow = Workflow.<Person>name("Sushil WOrflows")
+        Workflow<Person> workflow = Workflow.<Person>name("Sushil Workflows")
                 .withData(person)
                 .initialize(p -> p.withAge(30))
                 .log()

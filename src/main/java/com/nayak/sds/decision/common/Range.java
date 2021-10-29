@@ -9,7 +9,7 @@ import java.util.function.LongPredicate;
 import java.util.function.Predicate;
 
 /**
- * Range utility class which provides helper method to be be used in when statement range evaluation in
+ * Range utility class which provides helper method to be used in when statement range evaluation in
  */
 public class Range {
 

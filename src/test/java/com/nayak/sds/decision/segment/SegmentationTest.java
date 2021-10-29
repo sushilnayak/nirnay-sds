@@ -30,8 +30,7 @@ class SegmentationTest {
                 .when(between(35, 40)).then(Procedure.then(x -> x.withAge(5)))
                 .build();
 
-        System.out.println(rangeSegmentation.get());
-
+        assertThat(rangeSegmentation.get().getAge()).isEqualTo(5);
     }
 
     @Test

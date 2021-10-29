@@ -189,6 +189,8 @@ public class Scorecard<T> {
 
             if (predicate instanceof Predicate) {
                 matchingWhen = ((Predicate) predicate).test(result);
+            } else if(predicate instanceof Enum){
+                matchingWhen = caseCondition == predicate;
             } else {
                 matchingWhen = caseCondition.equals(predicate);
             }

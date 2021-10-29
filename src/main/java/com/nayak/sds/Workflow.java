@@ -4,7 +4,6 @@ import com.nayak.sds.decision.Procedure;
 import com.nayak.sds.decision.segment.Segmentation;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.LinkedList;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -16,7 +15,6 @@ import java.util.function.Function;
 @Slf4j
 public class Workflow<T> {
     private final Object result;
-    static LinkedList<String> path = new LinkedList<>();
 
     /**
      * @param result
@@ -31,8 +29,14 @@ public class Workflow<T> {
      * @return
      */
     public static <T> Workflow<T> name(String name) {
-        Workflow.path.add("Workflow(" + name + ")");
+        addPath("Workflow(" + name + ")");
         return new Workflow<>(name);
+    }
+
+    private static void addPath(String currentMethodName) {
+        StringBuilder stringBuilder = WorkflowContextHolder.workflowPath.get();
+        stringBuilder.append(" => ").append(currentMethodName);
+        WorkflowContextHolder.workflowPath.set(stringBuilder);
     }
 
     /**
@@ -42,6 +46,24 @@ public class Workflow<T> {
      */
     public <T> DataWorkflow<T> withData(T data) {
         return new DataWorkflow<>(data);
+    }
+
+    /**
+     * @return T
+     * @Deprecated NOTE: This method would be removed in future release. Do not use it
+     */
+    @Deprecated
+    @SuppressWarnings("unchecked")
+    public T internalGet() {
+        return (T) result;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T get() {
+        Objects.requireNonNull(result, "Before get(), we need to add steps for Workflow to work upon");
+        log.info(WorkflowContextHolder.workflowPath.get().toString());
+
+        return (T) result;
     }
 
     /**
@@ -62,7 +84,8 @@ public class Workflow<T> {
          * @return
          */
         public DataWorkflow<T> initialize(Function<T, T> init) {
-            Workflow.path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
+            addPath(Thread.currentThread().getStackTrace()[1].getMethodName());
+
             return new DataWorkflow<>(init.apply(result));
         }
 
@@ -72,7 +95,8 @@ public class Workflow<T> {
          */
         public DataWorkflow<T> segmentation(Function<T, Segmentation<T>> segmentation) {
             Objects.requireNonNull(segmentation, "Segmentation Needs to be provided. Cannot be null");
-            Workflow.path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
+            addPath(Thread.currentThread().getStackTrace()[1].getMethodName());
+
             return new DataWorkflow<>(segmentation.apply(result).get());
         }
 
@@ -81,14 +105,15 @@ public class Workflow<T> {
          * @return
          */
         public DataWorkflow<T> process(Procedure<T> procedure) {
-            Workflow.path.add(Thread.currentThread().getStackTrace()[1].getMethodName());
+            addPath(Thread.currentThread().getStackTrace()[1].getMethodName());
+
             return new DataWorkflow<>(procedure.apply(this.result));
         }
 
         /**
          * This would let us log the execution of log
          *
-         * @return
+         * @return DataWorkFlow
          */
         public DataWorkflow<T> log() {
             log.info("{}", result);
@@ -96,28 +121,12 @@ public class Workflow<T> {
         }
 
         /**
-         * @return
+         * @return Workflow
          */
         public Workflow<T> build() {
             return new Workflow<>(result);
         }
 
     }
-
-    /**
-     * @return
-     * @Deprecated NOTE: This method would be removed in future release. Do not use it
-     */
-    @Deprecated
-    public T internalGet() {
-        return (T) result;
-    }
-
-    public T get() {
-        Objects.requireNonNull(result, "Before get(), we need to add steps for Workflow to work upon");
-        log.info(String.join(" -> ", path));
-        return (T) result;
-    }
-
 
 }
