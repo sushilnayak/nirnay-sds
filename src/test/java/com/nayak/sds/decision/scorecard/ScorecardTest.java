@@ -77,7 +77,7 @@ class ScorecardTest {
                 .when(Gender.MALE).then(p -> p.withAge(77))
                 .when(Gender.MALE).then(p -> p.withAge(88))
                 .otherwise(p -> p.withAge(99))
-                .build().get();
+                .build();
 
         assertThat(build).isEqualTo(Person.builder().name(person.getName()).gender(person.getGender()).age(88).address(person.getAddress()).build());
     }
@@ -89,7 +89,7 @@ class ScorecardTest {
                 .withCase(Person::getGender)
                 .when(Gender.FEMALE).then(p -> p.withAge(77))
                 .otherwise(p -> p.withAge(99))
-                .build().get();
+                .build();
 
         assertThat(build).isEqualTo(Person.builder().name(person.getName()).gender(person.getGender()).age(99).address(person.getAddress()).build());
     }
@@ -103,7 +103,7 @@ class ScorecardTest {
                 .when(true).then(p -> p.withAge(77))
                 .when(false).then(p -> p.withAge(88))
                 .otherwise(p -> p.withAge(99))
-                .build().get();
+                .build();
 
         assertThat(build).isEqualTo(Person.builder().name(person.getName()).gender(person.getGender()).address(person.getAddress()).age(88).build());
     }

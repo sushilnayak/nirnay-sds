@@ -1,7 +1,6 @@
 package com.nayak.sds.decision.segment;
 
 import com.nayak.sds.Workflow;
-import com.nayak.sds.WorkflowContextHolder;
 import com.nayak.sds.decision.Procedure;
 
 import java.util.Objects;
@@ -67,9 +66,7 @@ public class Segmentation<T> {
 
         public <V> SegmentationWhen<T, V> withCase(Function<? super T, V> whenCondition) {
             Objects.requireNonNull(whenCondition, "When Condition cannot be null");
-
-            V caseCondition = whenCondition.apply(result);
-            return new SegmentationWhen<>(result, caseCondition, true);
+            return new SegmentationWhen<T, V>(result, whenCondition, true);
         }
 
 //        public SegmentationWhen<T, IntPredicate> withCase(PrimitiveIntRange<T> whenCondition){
@@ -79,14 +76,12 @@ public class Segmentation<T> {
 
         public SegmentationWhen<T, Boolean> withCase(Predicate<? super T> whenPredicate) {
             Objects.requireNonNull(whenPredicate, "Predicate for withBooleanCase cannot be null");
-
-            boolean caseCondition = whenPredicate.test(result);
-            return new SegmentationWhen<>(result, caseCondition, true);
+            return new SegmentationWhen<T, Boolean>(result, whenPredicate::test, true);
         }
 
         public SegmentationWhen<T, Predicate<T>> withCase() {
             Predicate<T> predicate = t -> false;
-            return new SegmentationWhen<>(result, predicate, true);
+            return new SegmentationWhen<T, Predicate<T>>(result, t -> predicate, true);
         }
     }
 
@@ -105,13 +100,13 @@ public class Segmentation<T> {
 
     public static class SegmentationThen<T, R> {
         private T result;
-        private final R caseCondition;
+        private final Function<? super T, R> caseFunction;
         private final boolean whenConditionMatched;
         private final boolean otherwiseApplicable;
 
-        SegmentationThen(T result, R caseCondition, boolean whenConditionMatched, boolean otherwiseApplicable) {
+        SegmentationThen(T result, Function<? super T, R> caseFunction, boolean whenConditionMatched, boolean otherwiseApplicable) {
             this.result = result;
-            this.caseCondition = caseCondition;
+            this.caseFunction = caseFunction;
             this.whenConditionMatched = whenConditionMatched;
             this.otherwiseApplicable = otherwiseApplicable;
         }
@@ -120,41 +115,49 @@ public class Segmentation<T> {
             if (this.whenConditionMatched) {
                 this.result = procedure.apply(this.result);
             }
-            return new SegmentationWhen<>(this.result, this.caseCondition, this.otherwiseApplicable);
+            return new SegmentationWhen<>(this.result, this.caseFunction, this.otherwiseApplicable);
         }
 
         public SegmentationWhen<T, R> thenProcedure(Procedure<T> procedure) {
             if (this.whenConditionMatched) {
                 this.result = procedure.apply(this.result);
             }
-            return new SegmentationWhen<>(this.result, this.caseCondition, this.otherwiseApplicable);
+            return new SegmentationWhen<>(this.result, this.caseFunction, this.otherwiseApplicable);
         }
 
         public SegmentationWhen<T, R> then(Function<T, Workflow<T>> workflow) {
             if (this.whenConditionMatched) {
                 this.result = workflow.apply(this.result).internalGet();
             }
-            return new SegmentationWhen<>(this.result, this.caseCondition, this.otherwiseApplicable);
+            return new SegmentationWhen<>(this.result, this.caseFunction, this.otherwiseApplicable);
         }
 
         public SegmentationWhen<T, R> thenWorkflow(Function<T, Workflow<T>> workflow) {
             if (this.whenConditionMatched) {
                 this.result = workflow.apply(this.result).internalGet();
             }
-            return new SegmentationWhen<>(this.result, this.caseCondition, this.otherwiseApplicable);
+            return new SegmentationWhen<>(this.result, this.caseFunction, this.otherwiseApplicable);
         }
     }
 
     public static class SegmentationWhen<T, R> extends SegmentationBuild<T> {
         private final T result;
-        private final R caseCondition;
+        private final Function<? super T, R> caseFunction;
         private final boolean otherwiseApplicable;
+        private R cachedCaseValue;
 
-        SegmentationWhen(T result, R caseCondition, boolean otherwiseApplicable) {
+        SegmentationWhen(T result, Function<? super T, R> caseFunction, boolean otherwiseApplicable) {
             super(result);
             this.result = result;
-            this.caseCondition = caseCondition;
+            this.caseFunction = caseFunction;
             this.otherwiseApplicable = otherwiseApplicable;
+        }
+
+        private R getCaseValue() {
+            if (cachedCaseValue == null) {
+                cachedCaseValue = caseFunction.apply(result);
+            }
+            return cachedCaseValue;
         }
 
         public SegmentationBuild<T> otherwise(Procedure<T> procedures) {
@@ -167,38 +170,40 @@ public class Segmentation<T> {
         }
 
         public SegmentationThen<T, R> when(IntPredicate condition) {
-            boolean matchingWhen = condition.test((Integer) caseCondition);
-            return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
+            boolean matchingWhen = condition.test((Integer) getCaseValue());
+            return new SegmentationThen<>(result, caseFunction, matchingWhen, !matchingWhen && this.otherwiseApplicable);
         }
 
         public SegmentationThen<T, R> when(LongPredicate condition) {
-            boolean matchingWhen = condition.test((Long) caseCondition);
-            return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
+            boolean matchingWhen = condition.test((Long) getCaseValue());
+            return new SegmentationThen<>(result, caseFunction, matchingWhen, !matchingWhen && this.otherwiseApplicable);
         }
 
         //
         public SegmentationThen<T, R> when(DoublePredicate condition) {
             boolean matchingWhen = false;
-            if (caseCondition instanceof Integer) {
-                matchingWhen = condition.test((Integer) caseCondition);
-            } else if (caseCondition instanceof Double) {
-                matchingWhen = condition.test((Double) caseCondition);
-            } else if (caseCondition instanceof Float) {
-                matchingWhen = condition.test((Float) caseCondition);
-            } else if (caseCondition instanceof Long) {
-                matchingWhen = condition.test((Long) caseCondition);
+            R caseValue = getCaseValue();
+            if (caseValue instanceof Integer) {
+                matchingWhen = condition.test((Integer) caseValue);
+            } else if (caseValue instanceof Double) {
+                matchingWhen = condition.test((Double) caseValue);
+            } else if (caseValue instanceof Float) {
+                matchingWhen = condition.test((Float) caseValue);
+            } else if (caseValue instanceof Long) {
+                matchingWhen = condition.test((Long) caseValue);
             }
-            return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
+            return new SegmentationThen<>(result, caseFunction, matchingWhen, !matchingWhen && this.otherwiseApplicable);
         }
 
         public SegmentationThen<T, R> when(R condition) {
             boolean matchingWhen;
+            R caseValue = getCaseValue();
             if (condition instanceof Predicate) {
                 matchingWhen = ((Predicate) condition).test(result);
             } else {
-                matchingWhen = caseCondition.equals(condition);
+                matchingWhen = caseValue.equals(condition);
             }
-            return new SegmentationThen<>(result, caseCondition, matchingWhen, !matchingWhen && this.otherwiseApplicable);
+            return new SegmentationThen<>(result, caseFunction, matchingWhen, !matchingWhen && this.otherwiseApplicable);
         }
 
     }
